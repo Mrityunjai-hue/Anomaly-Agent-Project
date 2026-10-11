@@ -34,6 +34,185 @@ The raw data is **not committed** to this repository. Download it from the datas
 
 The project’s `.gitignore` excludes `data/raw/` and selected large derived CSVs to keep the Git repository smaller. The data remains your responsibility to download locally before rerunning the full pipeline.
 
+## Raw-data EDA: findings from the original CSVs
+
+This section documents the exploration of the original Olist CSVs before cleaning and feature aggregation. These counts are from the raw-data EDA notebook; they are distinct from row counts in later cleaned tables or analytical datasets.
+
+### Raw dataset inventory
+
+| Raw table | Rows × columns | Missingness / duplicates | Key finding |
+|---|---:|---|---|
+| Orders | 99,441 × 8 | Missing lifecycle timestamps; no exact duplicate rows recorded | `order_id` unique; timestamps initially loaded as strings |
+| Customers | 99,441 × 5 | No missing values or exact duplicate rows | 99,441 `customer_id` records but 96,096 persistent `customer_unique_id` values |
+| Order items | 112,650 × 7 | No missing values or exact duplicate rows | 98,666 distinct orders; `(order_id, order_item_id)` is unique |
+| Products | 32,951 × 9 | 610 missing values in each of four descriptive/category columns; two missing values in each physical-dimension column | Most missingness concerns product metadata; two products lack physical measurements |
+| Category translations | 71 × 2 | No missing values or duplicate mappings | 73 non-null product categories, two without supplied translations |
+| Sellers | 3,095 × 4 | No missing values or exact duplicate rows | `seller_id` is unique |
+| Payments | 103,886 × 5 | No missing values or exact duplicate rows | 99,440 distinct orders; 2,961 orders have multiple payment records |
+| Reviews | 99,224 × 7 | 87,656 missing titles; 58,247 missing messages; no exact duplicate rows | 98,410 distinct review IDs and 98,673 distinct order IDs |
+| Geolocation | 1,000,163 × 5 | No missing values; 261,831 exact duplicate rows | 738,332 rows after exact-row deduplication; 19,015 ZIP prefixes |
+
+### Raw EDA workflow
+
+```mermaid
+flowchart TD
+    A["Nine original CSV tables"] --> B["Inspect dimensions, columns and data types"]
+    B --> C["Profile missing values and exact duplicates"]
+    C --> D["Validate unique and composite keys"]
+    D --> E["Inspect category and status distributions"]
+    E --> F["Check relationship keys and table grain"]
+    F --> G["Record exceptions and cleaning decisions"]
+    G --> H["Clean tables and build order-level features"]
+```
+
+### Orders: lifecycle and timestamp findings
+
+The raw orders table contains 99,441 rows and eight columns. `order_id` is unique; `customer_id` joins to customer records. All timestamp fields were initially strings and need datetime conversion for duration and delivery analysis.
+
+| Order status | Rows |
+|---|---:|
+| delivered | 96,478 |
+| shipped | 1,107 |
+| canceled | 625 |
+| unavailable | 609 |
+| invoiced | 314 |
+| processing | 301 |
+| created | 5 |
+| approved | 2 |
+| **Total** | **99,441** |
+
+| Timestamp column | Missing values | What EDA found |
+|---|---:|---|
+| `order_approved_at` | 160 | 141 canceled, 5 created and 14 delivered records |
+| `order_delivered_carrier_date` | 1,783 | 609 unavailable, 550 canceled, 314 invoiced, 301 processing, 5 created, 2 approved and 2 delivered |
+| `order_delivered_customer_date` | 2,965 | Mostly shipped/unfinished orders: 1,107 shipped, 619 canceled, 609 unavailable, 314 invoiced, 301 processing, 5 created and 2 approved; eight are marked delivered despite missing delivery timestamps |
+| `order_purchase_timestamp` | 0 | Available to define purchase date/time |
+| `order_estimated_delivery_date` | 0 | Available to compare with actual delivery where available |
+
+**Interpretation:** missing timestamps often reflect order lifecycle state, not a generic data-entry problem. Do not impute arbitrary dates. The eight delivered-status records with missing customer-delivery timestamps are exceptions worth preserving for investigation.
+
+### Customers: record identity and persistent identity
+
+| Measure | Raw EDA result |
+|---|---:|
+| Rows | 99,441 |
+| Unique `customer_id` | 99,441 |
+| Unique `customer_unique_id` | 96,096 |
+| ZIP prefixes | 14,994 |
+| Cities | 4,119 |
+| States | 27 |
+| Missing values / exact duplicate rows | 0 / 0 |
+| Customer records in SP | 41,746 |
+
+There are 3,345 more customer records than persistent customer identities. Use `customer_id` for the orders-to-customers relationship, but use `customer_unique_id` to aggregate repeat behaviour for RFM and the exploratory churn experiment.
+
+### Order items: one row per item, not per order
+
+| Measure | Result |
+|---|---:|
+| Item rows | 112,650 |
+| Distinct orders represented | 98,666 |
+| Orders in orders table without item records | 775 |
+| Average items per represented order | 1.14 |
+| Orders with one item | 88,863 |
+| Orders with two items | 7,516 |
+| Orders with three items | 1,322 |
+| Orders with four items | 505 |
+| Maximum items in one order | 21 |
+| Missing values / exact duplicate rows | 0 / 0 |
+| Duplicate `(order_id, order_item_id)` pairs | 0 |
+
+The pair `(order_id, order_item_id)` uniquely identifies an item row. `order_item_id` alone is a sequence number within an order, not a global identifier. Product price and freight should be aggregated at order level before combining with other one-to-many tables.
+
+### Payments: one order can have multiple payment rows
+
+| Measure | Result |
+|---|---:|
+| Payment rows | 103,886 |
+| Distinct orders with payment records | 99,440 |
+| Orders with multiple payment rows | 2,961 |
+| Maximum payment rows for one order | 29 |
+| Missing values / exact duplicate rows | 0 / 0 |
+| Duplicate `(order_id, payment_sequential)` pairs | 0 |
+
+| Payment type | Rows |
+|---|---:|
+| credit_card | 76,795 |
+| boleto | 19,784 |
+| voucher | 5,775 |
+| debit_card | 1,529 |
+| not_defined | 3 |
+
+Most multi-payment orders have two records (2,382 orders). One order has no payment record. Payment values must be aggregated by `order_id` before joining to other child tables to avoid double-counting.
+
+### Products and category translations: metadata gaps
+
+| Product field | Missing values |
+|---|---:|
+| `product_category_name` | 610 |
+| `product_name_lenght` | 610 |
+| `product_description_lenght` | 610 |
+| `product_photos_qty` | 610 |
+| `product_weight_g` | 2 |
+| `product_length_cm` | 2 |
+| `product_height_cm` | 2 |
+| `product_width_cm` | 2 |
+
+The product table has 32,951 rows, nine columns and no exact duplicate rows. The category translation table has 71 unique mappings and no missing values. The product table contains 73 distinct non-null categories; the supplied translation table does not include `pc_gamer` and `portateis_cozinha_e_preparadores_de_alimentos`. Keep these cases explicit or apply a documented fallback rather than silently dropping them.
+
+### Sellers: clean dimension table
+
+The raw seller table has 3,095 rows and four columns: seller ID, ZIP prefix, city and state. The EDA found no missing values, exact duplicate rows or duplicate seller IDs. Seller IDs connect seller attributes to order-item records.
+
+### Reviews: missing optional text and non-unique review IDs
+
+| Measure | Result |
+|---|---:|
+| Review rows | 99,224 |
+| Distinct review IDs | 98,410 |
+| Distinct order IDs | 98,673 |
+| Missing review titles | 87,656 |
+| Missing review messages | 58,247 |
+| Orders with multiple review rows | 547 |
+| Orders with two review rows | 543 |
+| Orders with three review rows | 4 |
+| Exact duplicate rows | 0 |
+
+| Review score | Rows |
+|---|---:|
+| 5 | 57,328 |
+| 4 | 19,142 |
+| 3 | 8,179 |
+| 2 | 3,151 |
+| 1 | 11,424 |
+
+The raw `review_id` is not unique: 764 IDs occur twice and 25 IDs occur three times. Missing comment/title text does not mean the review score is missing. For order-level analysis, aggregate review count, average score and negative-review indicators by `order_id` rather than assuming a one-to-one order/review relationship.
+
+### Geolocation: remove exact duplicates, not ZIP-prefix diversity
+
+| Measure | Result |
+|---|---:|
+| Raw rows | 1,000,163 |
+| Missing values | 0 |
+| Exact duplicate rows | 261,831 |
+| Rows after exact-row deduplication | 738,332 |
+| Distinct ZIP prefixes | 19,015 |
+| Distinct latitude/longitude pairs | 718,463 |
+| Average rows per ZIP prefix | 52.60 |
+| Maximum rows for one ZIP prefix | 1,146 |
+
+The raw geolocation table contains multiple coordinates for a ZIP prefix. Exact duplicate rows were removed during preparation, leaving 738,332 rows. Do not deduplicate by ZIP prefix alone; if one representative coordinate per prefix is needed, define an explicit aggregation or representative-point rule.
+
+### Why these EDA findings matter downstream
+
+1. **Join grain:** orders are one row per order; items and payments are one-to-many, and review IDs are not unique. Aggregate child tables before merging to avoid row multiplication.
+2. **Financial integrity:** validate item-price and freight totals after joins; the project recorded R$13,591,643.70 product revenue and R$2,251,909.54 freight at both item and analytical levels.
+3. **Lifecycle-aware cleaning:** preserve the difference between unfinished orders with expected missing delivery dates and delivered-status exceptions.
+4. **Customer identity:** use persistent `customer_unique_id` for behavioural analysis, not `customer_id` alone.
+5. **Metadata coverage:** preserve missing product attributes and untranslated categories transparently.
+6. **Review semantics:** aggregate scores separately from optional comment text.
+7. **Geolocation semantics:** remove exact duplicate rows without collapsing legitimate multiple coordinate records per ZIP prefix.
+
 ## Repository structure
 
 ```text
