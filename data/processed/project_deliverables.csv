@@ -1,0 +1,7 @@
+stage,main_output,status
+Data Cleaning,Cleaned CSV datasets,Completed
+Sales Analysis,monthly_sales_metrics.csv and daily_sales_metrics.csv,Completed
+Anomaly Detection,anomaly_report.csv and anomaly_summary.csv,Completed — exploratory baseline
+Customer RFM,customer_rfm_segments.csv,Completed
+Churn Modeling,churn_model_evaluation.csv and churn_test_predictions.csv,Completed — experimental baseline
+Business Insights,business_insights.csv,Completed

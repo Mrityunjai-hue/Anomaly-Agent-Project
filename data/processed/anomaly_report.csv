@@ -1,0 +1,20 @@
+purchase_date,total_orders,product_revenue,anomaly_reason
+2016-10-03,8,463.48,Unusually low order volume; Unusually low product revenue
+2017-01-05,32,396.9,Unusually low product revenue
+2017-11-24,1176,152653.74,Unusually high order volume; Unusually high product revenue
+2017-11-25,499,60923.48,Unusually high order volume; Unusually high product revenue
+2017-11-26,391,45315.28,Unusually high order volume; Unusually high product revenue
+2017-11-27,403,47923.66,Unusually high order volume; Unusually high product revenue
+2017-11-28,380,47886.55,Unusually high order volume; Unusually high product revenue
+2017-12-04,337,47348.52,Unusually high order volume; Unusually high product revenue
+2018-04-09,253,49308.73,Unusually high product revenue
+2018-05-07,372,54167.48,Unusually high order volume; Unusually high product revenue
+2018-05-08,331,47800.69,Unusually high order volume; Unusually high product revenue
+2018-05-09,344,43589.12,Unusually high order volume; Unusually high product revenue
+2018-05-10,279,51458.67,Unusually high product revenue
+2018-05-14,364,53842.38,Unusually high order volume; Unusually high product revenue
+2018-05-15,352,41119.85,Unusually high order volume
+2018-05-16,357,56283.73,Unusually high order volume; Unusually high product revenue
+2018-06-11,294,49669.7,Unusually high product revenue
+2018-08-06,372,56427.39,Unusually high order volume; Unusually high product revenue
+2018-08-07,370,49178.98,Unusually high order volume; Unusually high product revenue

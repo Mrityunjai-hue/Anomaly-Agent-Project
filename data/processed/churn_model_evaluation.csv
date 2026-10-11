@@ -1,0 +1,2 @@
+model,target,accuracy,inactive_precision,inactive_recall,inactive_f1,roc_auc
+Logistic Regression,90-day inactivity proxy,0.43829344432882417,0.9004652301665035,0.42421271196216404,0.5767270446169529,0.49755790019257057

@@ -1,0 +1,38 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+
+# Temporary files
+*.tmp
+*.bak
+
+# Raw Olist datasets (download separately)
+data/raw/
+
+# Large generated datasets
+data/processed/geolocation_cleaned.csv
+data/processed/analytics_orders.csv
+data/processed/order_level_features.csv

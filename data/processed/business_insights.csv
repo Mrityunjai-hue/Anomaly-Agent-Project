@@ -1,0 +1,6 @@
+area,finding,recommendation
+Sales,"Recorded product revenue totals R$ 13,591,643.70 across 99,441 monthly order counts.",Monitor revenue and order volume trends over time.
+Sales,Highest-revenue month in the monthly table: 2017-11.,Investigate drivers of peak monthly performance.
+Anomaly Detection,19 of 634 analyzed days were flagged by Isolation Forest.,"Review flagged days against promotions, holidays, and data-quality records."
+Customer Segmentation,6710 customers are classified as Best Customers.,Explore retention and loyalty strategies for high-value customers.
+Churn Modeling,The baseline model achieved ROC-AUC 0.4976 for the 90-day inactivity proxy.,Build a time-based prediction dataset before using churn predictions for business decisions.

@@ -1,0 +1,5 @@
+finding,evidence,interpretation,confidence
+Sales anomaly,"2017-11-24 recorded R$152,653.74 in product revenue and 1,176 orders.",Unusually high sales activity; investigate contributing categories and sellers.,Observed measurement
+Category contribution,"Top category: bed_bath_table; revenue difference R$ 16,005.13.",This category contributed strongly relative to its historical daily baseline.,Baseline comparison
+Seller contribution,"Top seller: f08a5b9dd6767129688d001acafc21e5; revenue difference R$ 5,767.81.",Investigate whether seller activity explains part of the sales spike.,Baseline comparison
+Delivery and customer satisfaction,Early-delivery average review: 4.29; late-delivery average review: 2.57; gap: 1.73 points.,Late delivery is associated with lower review scores in this dataset.,Descriptive association
